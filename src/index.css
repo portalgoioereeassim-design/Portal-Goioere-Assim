@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+:root {
+  --theme-font-body: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --theme-font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --theme-base-font-size: 16px;
+}
+
+html {
+  font-size: var(--theme-base-font-size);
+}
+
+body {
+  font-family: var(--theme-font-body);
+}
+
+/* Regras de tipografia e espaçamento para o corpo das matérias */
+.article-content {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.article-content p {
+  margin-bottom: 1.25rem;
+  line-height: 1.8;
+}
+
+.article-content strong,
+.article-content b {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.article-content em,
+.article-content i {
+  font-style: italic;
+}
+
+.article-content .uppercase {
+  text-transform: uppercase;
+}
+
+.article-content .font-serif,
+.article-font-serif {
+  font-family: 'Merriweather', Georgia, Cambria, 'Times New Roman', Times, serif;
+}
+
+.article-content .font-times,
+.article-font-times {
+  font-family: 'Times New Roman', Times, 'Nimbus Roman No9 L', serif;
+}
+
+.article-content .font-sans,
+.article-font-sans {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.article-content .font-mono,
+.article-font-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}

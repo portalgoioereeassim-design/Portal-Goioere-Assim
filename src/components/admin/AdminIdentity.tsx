@@ -1,0 +1,1640 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  Upload, 
+  Check, 
+  AlertCircle, 
+  Sparkles, 
+  Image as ImageIcon, 
+  Globe, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Palette, 
+  RefreshCw, 
+  RotateCcw, 
+  Type, 
+  TextQuote,
+  Instagram,
+  Facebook,
+  Twitter,
+  MessageCircle,
+  ExternalLink,
+  CheckCircle2,
+  XCircle,
+  Save
+} from 'lucide-react';
+import { VisualIdentity, ThemeColors, SiteFontFamily, SiteHeadingFontFamily, SiteBaseFontSize, LogoDisplayMode } from '../../types';
+import { storageService } from '../../services/storageService';
+import { applyThemeColors, applyThemeTypography, applyFavicon, DEFAULT_COLORS, DEFAULT_TYPOGRAPHY, FONT_DEFINITIONS } from '../../services/themeService';
+import { Logo } from '../Logo';
+
+interface AdminIdentityProps {
+  identity: VisualIdentity;
+  onRefresh?: () => void;
+}
+
+const COLOR_PRESETS = [
+  { name: 'Vermelho Notícias (Padrão)', primary: '#dc2626', topBarBg: '#0f172a', footerBg: '#020617', pageBg: '#f8fafc' },
+  { name: 'Azul Editorial', primary: '#1d4ed8', topBarBg: '#0f172a', footerBg: '#0f172a', pageBg: '#f8fafc' },
+  { name: 'Verde Esmeralda', primary: '#059669', topBarBg: '#064e3b', footerBg: '#022c22', pageBg: '#f8fafc' },
+  { name: 'Índigo Moderno', primary: '#6366f1', topBarBg: '#1e1b4b', footerBg: '#0f172a', pageBg: '#f8fafc' },
+  { name: 'Laranja Dinâmico', primary: '#ea580c', topBarBg: '#1c1917', footerBg: '#0c0a09', pageBg: '#f8fafc' },
+  { name: 'Grafite & Âmbar', primary: '#d97706', topBarBg: '#18181b', footerBg: '#09090b', pageBg: '#fafaf9' },
+  { name: 'Preto Minimalista', primary: '#0f172a', topBarBg: '#020617', footerBg: '#020617', pageBg: '#f8fafc' },
+];
+
+export const AdminIdentity: React.FC<AdminIdentityProps> = ({ identity, onRefresh }) => {
+  const [siteName, setSiteName] = useState(identity.siteName);
+  const [tagline, setTagline] = useState(identity.tagline);
+  const [showSiteName, setShowSiteName] = useState<boolean>(identity.showSiteName !== false);
+  const [logoDisplayMode, setLogoDisplayMode] = useState<LogoDisplayMode>(identity.logoDisplayMode || 'both');
+  const [logoSize, setLogoSize] = useState<'sm' | 'md' | 'lg' | 'xl' | '2xl'>(identity.logoSize || 'md');
+  const [logoHeight, setLogoHeight] = useState<number>(identity.logoHeight || 48);
+  const [description, setDescription] = useState(identity.description);
+  const [logoColorUrl, setLogoColorUrl] = useState(identity.logoColorUrl);
+  const [logoMonoUrl, setLogoMonoUrl] = useState(identity.logoMonoUrl);
+  const [faviconUrl, setFaviconUrl] = useState(identity.faviconUrl || '');
+  const [contactEmail, setContactEmail] = useState(identity.contactEmail);
+  const [contactPhone, setContactPhone] = useState(identity.contactPhone);
+  const [address, setAddress] = useState(identity.address);
+
+  // Site Colors
+  const [primaryColor, setPrimaryColor] = useState(identity.colors?.primary || '#dc2626');
+  const [topBarBg, setTopBarBg] = useState(identity.colors?.topBarBg || '#0f172a');
+  const [footerBg, setFooterBg] = useState(identity.colors?.footerBg || '#020617');
+  const [pageBg, setPageBg] = useState(identity.colors?.pageBg || '#f8fafc');
+
+  // Site Typography
+  const [fontFamily, setFontFamily] = useState<SiteFontFamily>(
+    identity.typography?.fontFamily || DEFAULT_TYPOGRAPHY.fontFamily
+  );
+  const [headingFontFamily, setHeadingFontFamily] = useState<SiteHeadingFontFamily>(
+    identity.typography?.headingFontFamily || DEFAULT_TYPOGRAPHY.headingFontFamily
+  );
+  const [baseFontSize, setBaseFontSize] = useState<SiteBaseFontSize>(
+    identity.typography?.baseFontSize || DEFAULT_TYPOGRAPHY.baseFontSize || 'base'
+  );
+
+  // Socials (Apenas Instagram, Facebook, WhatsApp e Twitter conforme solicitado)
+  const [instagram, setInstagram] = useState(identity.socialMedia?.instagram || '');
+  const [instagramEnabled, setInstagramEnabled] = useState<boolean>(identity.socialMedia?.instagramEnabled !== false);
+  const [facebook, setFacebook] = useState(identity.socialMedia?.facebook || '');
+  const [facebookEnabled, setFacebookEnabled] = useState<boolean>(identity.socialMedia?.facebookEnabled !== false);
+  const [whatsapp, setWhatsapp] = useState(identity.socialMedia?.whatsapp || '');
+  const [whatsappEnabled, setWhatsappEnabled] = useState<boolean>(identity.socialMedia?.whatsappEnabled !== false);
+  const [twitter, setTwitter] = useState(identity.socialMedia?.twitter || '');
+  const [twitterEnabled, setTwitterEnabled] = useState<boolean>(identity.socialMedia?.twitterEnabled !== false);
+
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const colorFileInputRef = useRef<HTMLInputElement>(null);
+  const monoFileInputRef = useRef<HTMLInputElement>(null);
+  const faviconFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Apply live colors immediately whenever user picks or edits colors
+  useEffect(() => {
+    applyThemeColors({
+      primary: primaryColor,
+      topBarBg,
+      footerBg,
+      pageBg,
+    });
+  }, [primaryColor, topBarBg, footerBg, pageBg]);
+
+  // Apply live typography immediately whenever user picks or edits typography
+  useEffect(() => {
+    applyThemeTypography({
+      fontFamily,
+      headingFontFamily,
+      baseFontSize,
+    });
+  }, [fontFamily, headingFontFamily, baseFontSize]);
+
+  const handleApplyPreset = (preset: typeof COLOR_PRESETS[0]) => {
+    setPrimaryColor(preset.primary);
+    setTopBarBg(preset.topBarBg);
+    setFooterBg(preset.footerBg);
+    setPageBg(preset.pageBg);
+    applyThemeColors({
+      primary: preset.primary,
+      topBarBg: preset.topBarBg,
+      footerBg: preset.footerBg,
+      pageBg: preset.pageBg,
+    });
+  };
+
+  const handleResetDefaultColors = () => {
+    setPrimaryColor(DEFAULT_COLORS.primary);
+    setTopBarBg(DEFAULT_COLORS.topBarBg);
+    setFooterBg(DEFAULT_COLORS.footerBg);
+    setPageBg(DEFAULT_COLORS.pageBg);
+    applyThemeColors(DEFAULT_COLORS);
+  };
+
+  const handleResetDefaultTypography = () => {
+    setFontFamily(DEFAULT_TYPOGRAPHY.fontFamily);
+    setHeadingFontFamily(DEFAULT_TYPOGRAPHY.headingFontFamily);
+    setBaseFontSize(DEFAULT_TYPOGRAPHY.baseFontSize);
+    applyThemeTypography(DEFAULT_TYPOGRAPHY);
+  };
+
+  const optimizeImageFile = (
+    file: File,
+    maxWidth: number,
+    maxHeight: number,
+    isFavicon: boolean = false
+  ): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (file.type === 'image/svg+xml') {
+        const reader = new FileReader();
+        reader.onerror = reject;
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => resolve(reader.result as string);
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+
+          if (isFavicon) {
+            width = 64;
+            height = 64;
+          } else {
+            if (width > maxWidth || height > maxHeight) {
+              const ratio = Math.min(maxWidth / width, maxHeight / height);
+              width = Math.max(1, Math.round(width * ratio));
+              height = Math.max(1, Math.round(height * ratio));
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(reader.result as string);
+            return;
+          }
+
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/png', 0.95));
+        };
+        img.src = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileUpload = async (type: 'color' | 'mono' | 'favicon', e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      if (type === 'favicon') {
+        const optimized = await optimizeImageFile(file, 64, 64, true);
+        setFaviconUrl(optimized);
+        applyFavicon(optimized);
+
+        // Immediate persistence
+        const current = storageService.getVisualIdentity();
+        storageService.saveVisualIdentity({
+          ...current,
+          faviconUrl: optimized,
+        });
+        setMessage({ type: 'success', text: 'Favicon salvo e aplicado com sucesso na aba do navegador!' });
+        onRefresh?.();
+      } else if (type === 'color') {
+        const optimized = await optimizeImageFile(file, 800, 240, false);
+        setLogoColorUrl(optimized);
+
+        const current = storageService.getVisualIdentity();
+        storageService.saveVisualIdentity({
+          ...current,
+          logoColorUrl: optimized,
+        });
+        setMessage({ type: 'success', text: 'Logo colorida atualizada e salva com sucesso!' });
+        onRefresh?.();
+      } else if (type === 'mono') {
+        const optimized = await optimizeImageFile(file, 800, 240, false);
+        setLogoMonoUrl(optimized);
+
+        const current = storageService.getVisualIdentity();
+        storageService.saveVisualIdentity({
+          ...current,
+          logoMonoUrl: optimized,
+        });
+        setMessage({ type: 'success', text: 'Logo monocromática do rodapé atualizada e salva com sucesso!' });
+        onRefresh?.();
+      }
+    } catch (err) {
+      console.error('Falha ao processar upload:', err);
+      setMessage({ type: 'error', text: 'Erro ao processar imagem. Tente formato PNG, SVG ou JPG.' });
+    } finally {
+      if (e.target) e.target.value = '';
+      setTimeout(() => setMessage(null), 4000);
+    }
+  };
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const updated: VisualIdentity = {
+      siteName: siteName.trim() || 'PORTAL NOTÍCIAS',
+      tagline: tagline.trim(),
+      description: description.trim(),
+      showSiteName,
+      logoDisplayMode,
+      logoSize,
+      logoHeight,
+      logoColorUrl: logoColorUrl.trim(),
+      logoMonoUrl: logoMonoUrl.trim(),
+      faviconUrl: faviconUrl.trim(),
+      contactEmail: contactEmail.trim(),
+      contactPhone: contactPhone.trim(),
+      address: address.trim(),
+      colors: {
+        primary: primaryColor,
+        topBarBg,
+        footerBg,
+        pageBg,
+      },
+      typography: {
+        fontFamily,
+        headingFontFamily,
+        baseFontSize,
+      },
+      socialMedia: {
+        instagram: instagram.trim(),
+        instagramEnabled,
+        facebook: facebook.trim(),
+        facebookEnabled,
+        whatsapp: whatsapp.trim(),
+        whatsappEnabled,
+        twitter: twitter.trim(),
+        twitterEnabled,
+      }
+    };
+
+    storageService.saveVisualIdentity(updated);
+    applyFavicon(updated.faviconUrl);
+
+    setMessage({ type: 'success', text: 'Identidade visual, favicon, fontes, logos e cores atualizados com sucesso!' });
+    onRefresh?.();
+    setTimeout(() => setMessage(null), 3500);
+  };
+
+  const previewIdentity: VisualIdentity = {
+    ...identity,
+    siteName,
+    tagline,
+    showSiteName,
+    logoDisplayMode,
+    logoSize,
+    logoHeight,
+    logoColorUrl,
+    logoMonoUrl,
+    faviconUrl,
+    colors: {
+      primary: primaryColor,
+      topBarBg,
+      footerBg,
+      pageBg,
+    },
+    typography: {
+      fontFamily,
+      headingFontFamily,
+      baseFontSize,
+    }
+  };
+
+  return (
+    <div className="space-y-8 animate-fadeIn">
+      <div>
+        <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+          Identidade Visual & Logos
+        </h2>
+        <p className="text-xs text-slate-500">
+          Personalize as marcas do site: a logo colorida para o cabeçalho e a versão monocromática para o rodapé escuro.
+        </p>
+      </div>
+
+      {message && (
+        <div className={`p-4 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+          message.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'
+        }`}>
+          {message.type === 'success' ? <Check className="w-4 h-4 text-emerald-600" /> : <AlertCircle className="w-4 h-4 text-red-600" />}
+          <span>{message.text}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleSave} className="space-y-8">
+        {/* Section 1: Logos (Colorida para Header & Monocromática para Rodapé) */}
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
+          <div className="border-b border-slate-100 pb-3">
+            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <ImageIcon className="w-4 h-4 text-red-600" />
+              <span>Gerenciamento de Logos</span>
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Cadastre separadamente a versão colorida (para o cabeçalho claro) e a monocromática (para o rodapé escuro).
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Logo Colorida */}
+            <div className="space-y-4 p-5 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider">
+                  Logo Colorida (Cabeçalho)
+                </label>
+                <span className="text-[10px] uppercase font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded">
+                  Header Claro
+                </span>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={logoColorUrl}
+                  onChange={(e) => setLogoColorUrl(e.target.value)}
+                  placeholder="URL da logo colorida (PNG/SVG/JPG) ou faça upload..."
+                  className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800"
+                />
+                <button
+                  type="button"
+                  onClick={() => colorFileInputRef.current?.click()}
+                  className="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1 shrink-0"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Upload</span>
+                </button>
+                <input
+                  ref={colorFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload('color', e)}
+                  className="hidden"
+                />
+              </div>
+
+              {/* Preview of Header Logo */}
+              <div className="pt-2">
+                <span className="text-[11px] font-bold text-slate-500 mb-2 block">Prévia no Cabeçalho (Fundo Branco):</span>
+                <div className="p-4 bg-white rounded-xl border border-slate-200 flex items-center justify-center min-h-[90px] overflow-hidden">
+                  <Logo identity={previewIdentity} variant="color" />
+                </div>
+              </div>
+            </div>
+
+            {/* Logo Monocromática */}
+            <div className="space-y-4 p-5 rounded-xl bg-slate-900 text-white border border-slate-800">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-white uppercase tracking-wider">
+                  Logo Monocromática (Rodapé)
+                </label>
+                <span className="text-[10px] uppercase font-bold text-slate-300 bg-slate-800 px-2 py-0.5 rounded">
+                  Rodapé Escuro
+                </span>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={logoMonoUrl}
+                  onChange={(e) => setLogoMonoUrl(e.target.value)}
+                  placeholder="URL da logo monocromática (branca/cinza) ou upload..."
+                  className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-400"
+                />
+                <button
+                  type="button"
+                  onClick={() => monoFileInputRef.current?.click()}
+                  className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold flex items-center gap-1 shrink-0"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Upload</span>
+                </button>
+                <input
+                  ref={monoFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload('mono', e)}
+                  className="hidden"
+                />
+              </div>
+
+              {/* Preview of Footer Logo */}
+              <div className="pt-2">
+                <span className="text-[11px] font-bold text-slate-400 mb-2 block">Prévia no Rodapé (Fundo Escuro):</span>
+                <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center min-h-[90px] overflow-hidden">
+                  <Logo identity={previewIdentity} variant="mono" />
+                </div>
+              </div>
+            </div>
+
+            {/* Favicon do Site (Aba do Navegador) */}
+            <div className="md:col-span-2 space-y-4 p-5 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <span>Favicon do Site (Ícone da Aba do Navegador)</span>
+                  </label>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Ícone que aparece na aba do navegador, favoritos e atalhos móveis (recomendado PNG ou ICO quadrado de 32x32px ou 64x64px).
+                  </p>
+                </div>
+                {faviconUrl && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFaviconUrl('');
+                      applyFavicon('');
+                      const current = storageService.getVisualIdentity();
+                      storageService.saveVisualIdentity({ ...current, faviconUrl: '' });
+                      setMessage({ type: 'success', text: 'Favicon redefinido para o padrão do portal.' });
+                      onRefresh?.();
+                      setTimeout(() => setMessage(null), 3000);
+                    }}
+                    className="text-[11px] text-red-600 hover:text-red-700 font-semibold cursor-pointer underline self-start sm:self-auto"
+                  >
+                    Remover Favicon Personalizado
+                  </button>
+                )}
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                <div className="flex-1 w-full flex gap-2">
+                  <input
+                    type="url"
+                    value={faviconUrl}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFaviconUrl(val);
+                      applyFavicon(val);
+                    }}
+                    placeholder="URL do ícone favicon (PNG/ICO/SVG) ou faça upload..."
+                    className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => faviconFileInputRef.current?.click()}
+                    className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 cursor-pointer transition-colors shadow-xs"
+                  >
+                    <Upload className="w-3.5 h-3.5 text-white" />
+                    <span>Upload Ícone</span>
+                  </button>
+                  <input
+                    ref={faviconFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload('favicon', e)}
+                    className="hidden"
+                  />
+                </div>
+
+                {/* Mockup de Aba de Navegador para Prévia do Favicon */}
+                <div className="shrink-0">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+                    Prévia na Aba do Navegador:
+                  </span>
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-300 rounded-t-lg shadow-2xs text-xs font-medium text-slate-700 max-w-xs">
+                    {faviconUrl ? (
+                      <img
+                        src={faviconUrl}
+                        alt="Favicon"
+                        className="w-4 h-4 object-contain rounded-xs shrink-0"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-4 h-4 rounded-xs bg-red-600 flex items-center justify-center text-[9px] font-bold text-white shrink-0">
+                        P
+                      </div>
+                    )}
+                    <span className="truncate max-w-[140px] text-[11px] font-medium text-slate-800">
+                      {siteName || 'Portal Notícias'}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-bold ml-1">×</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botão de Salvar Imediatamente Logos e Favicon */}
+              <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/80">
+                <div className="text-[11px] text-slate-500">
+                  Ao fazer upload da logo ou favicon, o sistema otimiza a imagem automaticamente e já aplica na aba.
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = storageService.getVisualIdentity();
+                    const updated = {
+                      ...current,
+                      logoColorUrl: logoColorUrl.trim(),
+                      logoMonoUrl: logoMonoUrl.trim(),
+                      faviconUrl: faviconUrl.trim(),
+                      logoDisplayMode,
+                      logoHeight,
+                      logoSize,
+                      showSiteName,
+                    };
+                    storageService.saveVisualIdentity(updated);
+                    applyFavicon(updated.faviconUrl);
+                    setMessage({ type: 'success', text: 'Logos, favicon e modo de exibição salvos com sucesso!' });
+                    onRefresh?.();
+                    setTimeout(() => setMessage(null), 3500);
+                  }}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Salvar Logos & Favicon Agora</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Control to Increase and Adjust Logo Size */}
+            <div className="md:col-span-2 p-5 rounded-xl bg-gradient-to-r from-red-50/60 via-slate-50 to-slate-50 border border-slate-200/90 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <label className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-red-600" />
+                    <span>Aumentar / Ajustar Tamanho da Logo (Home e Cabeçalho)</span>
+                  </label>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Defina a altura exata da logo do site. A logo aumentará proporcionalmente na página inicial e no cabeçalho.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-red-600 text-white shadow-xs">
+                    {logoHeight} px
+                  </span>
+                </div>
+              </div>
+
+              {/* Presets Rápidos */}
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">
+                  Tamanhos Pré-definidos:
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { label: 'Pequeno (36px)', h: 36, size: 'sm' as const },
+                    { label: 'Padrão (48px)', h: 48, size: 'md' as const },
+                    { label: 'Médio / Grande (64px)', h: 64, size: 'lg' as const },
+                    { label: 'Grande (80px)', h: 80, size: 'xl' as const },
+                    { label: 'Extra Grande (96px)', h: 96, size: '2xl' as const },
+                    { label: 'Super Destaque (116px)', h: 116, size: '2xl' as const },
+                  ].map((p) => {
+                    const isSelected = logoHeight === p.h;
+                    return (
+                      <button
+                        key={p.label}
+                        type="button"
+                        onClick={() => {
+                          setLogoHeight(p.h);
+                          setLogoSize(p.size);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-red-600 text-white shadow-xs scale-102'
+                            : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Slider de Precisão */}
+              <div>
+                <div className="flex items-center justify-between text-[11px] text-slate-600 font-medium mb-1">
+                  <span>32px (Compacto)</span>
+                  <span className="font-bold text-slate-900">Ajuste Fino: {logoHeight}px</span>
+                  <span>140px (Máximo)</span>
+                </div>
+                <input
+                  type="range"
+                  min="32"
+                  max="140"
+                  step="2"
+                  value={logoHeight}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    setLogoHeight(val);
+                    if (val < 40) setLogoSize('sm');
+                    else if (val < 54) setLogoSize('md');
+                    else if (val < 72) setLogoSize('lg');
+                    else if (val < 90) setLogoSize('xl');
+                    else setLogoSize('2xl');
+                  }}
+                  className="w-full accent-red-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* Quick Toggle for Site Name */}
+            <div className="md:col-span-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200">
+              <div>
+                <span className="text-xs font-bold text-slate-900 block">
+                  Exibição do Nome do Portal no Cabeçalho e Logos
+                </span>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  {showSiteName 
+                    ? 'O nome textual do portal está ativo e visível junto à logo.' 
+                    : 'O nome textual está desabilitado, exibindo apenas a imagem ou emblema da logo.'}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowSiteName(!showSiteName)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                    showSiteName ? 'bg-red-600' : 'bg-slate-300'
+                  }`}
+                  role="switch"
+                  aria-checked={showSiteName}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      showSiteName ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+                <span className={`text-xs font-bold ${showSiteName ? 'text-red-600' : 'text-slate-400'}`}>
+                  {showSiteName ? 'Nome Habilitado' : 'Nome Desabilitado'}
+                </span>
+              </div>
+            </div>
+
+            {/* Logo Display Mode Selector */}
+            <div className="md:col-span-2 p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+              <div>
+                <span className="text-xs font-bold text-slate-900 block">
+                  Modo de Composição da Logo (Cabeçalho & Rodapé)
+                </span>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Escolha se deseja que sua imagem de logo apareça com o nome ao lado, somente a imagem, ou somente texto.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                {[
+                  { id: 'both' as const, label: 'Imagem da Logo + Nome', desc: 'Exibe a imagem carregada com o nome do portal' },
+                  { id: 'logo_only' as const, label: 'Apenas a Imagem', desc: 'Exibe somente a logo gráfica sem texto adicional' },
+                  { id: 'text_only' as const, label: 'Apenas Nome em Texto', desc: 'Exibe somente a tipografia estilizada' }
+                ].map((mode) => (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    onClick={() => {
+                      setLogoDisplayMode(mode.id);
+                      if (mode.id === 'logo_only') setShowSiteName(false);
+                      else if (mode.id === 'both' || mode.id === 'text_only') setShowSiteName(true);
+                    }}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                      logoDisplayMode === mode.id
+                        ? 'bg-red-50/80 border-red-500 ring-2 ring-red-500/20 shadow-2xs'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-slate-900">{mode.label}</span>
+                      {logoDisplayMode === mode.id && <Check className="w-3.5 h-3.5 text-red-600" />}
+                    </div>
+                    <p className="text-[10px] text-slate-500 leading-tight">{mode.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section: Paleta de Cores & Personalização do Tema */}
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
+          <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Palette className="w-4 h-4 text-red-600" />
+                <span>Cores & Personalização do Site</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Personalize as cores dos elementos do portal ou escolha uma paleta profissional pronta.
+              </p>
+            </div>
+            <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 w-fit">
+              Aplicação Instantânea
+            </span>
+          </div>
+
+          {/* Presets Rápidos */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              Paletas Rápidas Pré-Definidas
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {COLOR_PRESETS.map((preset) => {
+                const isCurrent = primaryColor.toLowerCase() === preset.primary.toLowerCase();
+                return (
+                  <button
+                    key={preset.name}
+                    type="button"
+                    onClick={() => handleApplyPreset(preset)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-2 transition-all border ${
+                      isCurrent
+                        ? 'border-slate-900 bg-slate-900 text-white shadow-xs'
+                        : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span
+                      className="w-3.5 h-3.5 rounded-full border border-white/40 shadow-xs"
+                      style={{ backgroundColor: preset.primary }}
+                    />
+                    <span>{preset.name}</span>
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={handleResetDefaultColors}
+                className="px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all border border-slate-300 bg-white text-slate-600 hover:bg-slate-100 shadow-2xs"
+                title="Restaurar cores originais do portal"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                <span>Restaurar Cores Padrão</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Color Controls Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* 1. Cor Primária */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                Cor Primária / Destaque
+              </label>
+              <p className="text-[11px] text-slate-500">Botões, destaques, selos e links ativos</p>
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="color"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="w-10 h-10 p-0.5 rounded-lg border border-slate-200 cursor-pointer shrink-0"
+                />
+                <input
+                  type="text"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono font-bold uppercase text-slate-800"
+                />
+              </div>
+            </div>
+
+            {/* 2. Top Bar Background */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                Barra Superior (Top Bar)
+              </label>
+              <p className="text-[11px] text-slate-500">Faixa de plantão e data no topo</p>
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="color"
+                  value={topBarBg}
+                  onChange={(e) => setTopBarBg(e.target.value)}
+                  className="w-10 h-10 p-0.5 rounded-lg border border-slate-200 cursor-pointer shrink-0"
+                />
+                <input
+                  type="text"
+                  value={topBarBg}
+                  onChange={(e) => setTopBarBg(e.target.value)}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono font-bold uppercase text-slate-800"
+                />
+              </div>
+            </div>
+
+            {/* 3. Footer Background */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                Fundo do Rodapé
+              </label>
+              <p className="text-[11px] text-slate-500">Área institucional inferior do site</p>
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="color"
+                  value={footerBg}
+                  onChange={(e) => setFooterBg(e.target.value)}
+                  className="w-10 h-10 p-0.5 rounded-lg border border-slate-200 cursor-pointer shrink-0"
+                />
+                <input
+                  type="text"
+                  value={footerBg}
+                  onChange={(e) => setFooterBg(e.target.value)}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono font-bold uppercase text-slate-800"
+                />
+              </div>
+            </div>
+
+            {/* 4. Page Background */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                Fundo da Página
+              </label>
+              <p className="text-[11px] text-slate-500">Cor de fundo de todo o portal</p>
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="color"
+                  value={pageBg}
+                  onChange={(e) => setPageBg(e.target.value)}
+                  className="w-10 h-10 p-0.5 rounded-lg border border-slate-200 cursor-pointer shrink-0"
+                />
+                <input
+                  type="text"
+                  value={pageBg}
+                  onChange={(e) => setPageBg(e.target.value)}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono font-bold uppercase text-slate-800"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive Live Theme Preview Box */}
+          <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-3">
+            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider block">
+              Simulação do Tema em Tempo Real
+            </span>
+
+            <div
+              className="rounded-xl border border-slate-200 overflow-hidden shadow-xs"
+              style={{ backgroundColor: pageBg }}
+            >
+              {/* Mini Top Bar */}
+              <div
+                className="px-4 py-2 text-white flex items-center justify-between text-[11px] font-semibold"
+                style={{ backgroundColor: topBarBg }}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-white"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    Plantão
+                  </span>
+                  <span className="truncate">Portal Notícias 24h ao vivo no ar</span>
+                </div>
+                <span className="text-white/60 text-[10px] hidden sm:inline">Edição Digital</span>
+              </div>
+
+              {/* Mini Content Area */}
+              <div className="p-4 bg-white/90 m-3 rounded-lg border border-slate-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: primaryColor }}
+                    />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      Últimas Notícias
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-bold text-slate-900">
+                    Título de exemplo com o estilo visual e contraste escolhidos
+                  </h4>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    className="px-3 py-1.5 text-white rounded-lg text-xs font-bold shadow-xs transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    Ler Matéria
+                  </button>
+                  <span
+                    className="text-xs font-bold cursor-pointer"
+                    style={{ color: primaryColor }}
+                  >
+                    Ver Categoria →
+                  </span>
+                </div>
+              </div>
+
+              {/* Mini Footer */}
+              <div
+                className="px-4 py-3 text-white/70 flex items-center justify-between text-[11px]"
+                style={{ backgroundColor: footerBg }}
+              >
+                <span className="font-bold text-white tracking-wider">{siteName || 'PORTAL NOTÍCIAS'}</span>
+                <span className="text-[10px] text-white/50">Rodapé personalizado</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Tipografia & Fontes de Todo o Site */}
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div>
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Type className="w-4 h-4 text-red-600" />
+                <span>Tipografia & Fontes de Todo o Site</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Altere a família de fontes de todo o portal. A fonte escolhida é aplicada instantaneamente nas matérias, cabeçalho, cartões, menus e rodapé.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleResetDefaultTypography}
+              className="px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all border border-slate-300 bg-white text-slate-600 hover:bg-slate-100 shadow-2xs self-start sm:self-center shrink-0 cursor-pointer"
+              title="Restaurar fonte padrão do portal"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+              <span>Restaurar Fonte Padrão</span>
+            </button>
+          </div>
+
+          {/* 1. Escolha da Fonte Principal */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                1. Fonte Principal (Corpo do Texto, Notícias e Navegação)
+              </label>
+              <span className="text-[11px] font-semibold text-slate-500">
+                Ativa:{' '}
+                <strong className="text-slate-900 font-bold">
+                  {FONT_DEFINITIONS[fontFamily]?.name}
+                </strong>
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+              {(Object.keys(FONT_DEFINITIONS) as SiteFontFamily[]).map((key) => {
+                const font = FONT_DEFINITIONS[key];
+                const isSelected = fontFamily === key;
+
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setFontFamily(key)}
+                    className={`text-left p-4 rounded-xl border transition-all relative flex flex-col justify-between gap-3 cursor-pointer ${
+                      isSelected
+                        ? 'border-red-600 ring-2 ring-red-500/30 bg-red-50/20 shadow-xs'
+                        : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100/80 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-bold text-slate-900 tracking-tight">
+                          {font.name}
+                        </span>
+                        {isSelected && (
+                          <span className="w-4 h-4 rounded-full bg-red-600 text-white flex items-center justify-center shrink-0">
+                            <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          </span>
+                        )}
+                      </div>
+
+                      <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-200/60 px-2 py-0.5 rounded">
+                        {font.categoryLabel}
+                      </span>
+                    </div>
+
+                    {/* Visual Typography Specimen */}
+                    <div
+                      className="text-base sm:text-lg font-medium text-slate-800 leading-snug py-1 border-y border-slate-200/60"
+                      style={{ fontFamily: font.cssFamily }}
+                    >
+                      Aa Bb Gg 123
+                    </div>
+
+                    <p className="text-[11px] text-slate-500 leading-tight">
+                      {font.description}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 2. Combinação Editorial para Manchetes e Títulos */}
+          <div className="pt-2 border-t border-slate-100 space-y-3">
+            <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+              2. Estilo das Manchetes e Títulos (H1, H2, H3 e Destaques)
+            </label>
+            <p className="text-[11px] text-slate-500">
+              Você pode manter a mesma fonte em tudo ou aplicar contraste editorial nas manchetes de destaque.
+            </p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {[
+                { id: 'same', label: 'Mesma do Site (Harmônica)', fontDef: FONT_DEFINITIONS[fontFamily] },
+                { id: 'playfair', label: 'Playfair (Sofisticada)', fontDef: FONT_DEFINITIONS.playfair },
+                { id: 'merriweather', label: 'Merriweather (Clássica)', fontDef: FONT_DEFINITIONS.merriweather },
+                { id: 'oswald', label: 'Oswald (Plantão Condensado)', fontDef: FONT_DEFINITIONS.oswald },
+                { id: 'montserrat', label: 'Montserrat (Geométrica)', fontDef: FONT_DEFINITIONS.montserrat },
+                { id: 'lora', label: 'Lora (Literária Refinada)', fontDef: FONT_DEFINITIONS.lora },
+                { id: 'inter', label: 'Inter (Neutra & Direta)', fontDef: FONT_DEFINITIONS.inter },
+                { id: 'plus_jakarta_sans', label: 'Jakarta (Moderna)', fontDef: FONT_DEFINITIONS.plus_jakarta_sans },
+              ].map((opt) => {
+                const isSelected = headingFontFamily === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setHeadingFontFamily(opt.id as SiteHeadingFontFamily)}
+                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      isSelected
+                        ? 'border-red-600 bg-red-50/30 text-red-950 font-bold shadow-2xs'
+                        : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    <span className="block text-xs truncate font-semibold mb-1">
+                      {opt.label}
+                    </span>
+                    <span
+                      className="block text-sm sm:text-base font-bold text-slate-900 truncate"
+                      style={{ fontFamily: opt.fontDef?.cssFamily }}
+                    >
+                      Manchete Geral
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 3. Escala e Tamanho Base de Leitura */}
+          <div className="pt-2 border-t border-slate-100 space-y-3">
+            <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+              3. Escala do Texto (Tamanho Base de Leitura)
+            </label>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[
+                { id: 'sm', label: 'Compacto (15px)', desc: 'Mais matérias e informações visíveis por tela' },
+                { id: 'base', label: 'Padrão (16px)', desc: 'Equilíbrio editorial ideal e recomendado para leitura' },
+                { id: 'lg', label: 'Confortável (17px)', desc: 'Maior acessibilidade, espaço e conforto aos olhos' },
+              ].map((sizeOpt) => {
+                const isSelected = baseFontSize === sizeOpt.id;
+                return (
+                  <button
+                    key={sizeOpt.id}
+                    type="button"
+                    onClick={() => setBaseFontSize(sizeOpt.id as SiteBaseFontSize)}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                      isSelected
+                        ? 'border-red-600 bg-red-50/20 shadow-2xs'
+                        : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-slate-900">
+                        {sizeOpt.label}
+                      </span>
+                      {isSelected && (
+                        <span className="w-3.5 h-3.5 rounded-full bg-red-600 text-white flex items-center justify-center">
+                          <Check className="w-2 h-2 stroke-[3]" />
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      {sizeOpt.desc}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 4. Simulação Tipográfica Completa ao Vivo */}
+          <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50/80 space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-red-600" />
+                Demonstração Tipográfica em Tempo Real
+              </span>
+
+              <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                <span className="bg-white px-2.5 py-1 rounded-md border border-slate-200 font-medium">
+                  Fonte: <strong className="text-slate-800">{FONT_DEFINITIONS[fontFamily]?.name}</strong>
+                </span>
+                <span className="bg-white px-2.5 py-1 rounded-md border border-slate-200 font-medium">
+                  Títulos:{' '}
+                  <strong className="text-slate-800">
+                    {headingFontFamily === 'same' ? 'Igual ao Site' : FONT_DEFINITIONS[headingFontFamily as SiteFontFamily]?.name}
+                  </strong>
+                </span>
+              </div>
+            </div>
+
+            {/* Specimen Sheet */}
+            <div className="bg-white rounded-xl border border-slate-200/80 p-5 sm:p-6 shadow-xs space-y-4">
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <span
+                  className="px-2 py-0.5 rounded text-[10px] font-bold uppercase text-white"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  Economia & Política
+                </span>
+                <span>•</span>
+                <span>15 de Setembro de 2026</span>
+                <span>•</span>
+                <span>4 min de leitura</span>
+              </div>
+
+              {/* Sample Headline */}
+              <h4
+                className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 leading-tight"
+                style={{
+                  fontFamily:
+                    headingFontFamily === 'same'
+                      ? FONT_DEFINITIONS[fontFamily]?.cssFamily
+                      : FONT_DEFINITIONS[headingFontFamily as SiteFontFamily]?.cssFamily,
+                }}
+              >
+                Congresso e Governo Definem Nova Agenda de Investimentos e Sustentabilidade
+              </h4>
+
+              {/* Sample Subtitle / Lead */}
+              <p
+                className="text-sm sm:text-base text-slate-600 font-medium leading-relaxed border-l-3 border-red-600 pl-3 py-0.5"
+                style={{ fontFamily: FONT_DEFINITIONS[fontFamily]?.cssFamily }}
+              >
+                Especialistas debatem os efeitos imediatos para o mercado de trabalho, inflação e desenvolvimento das capitais brasileiras.
+              </p>
+
+              {/* Sample Article Body Paragraph */}
+              <p
+                className="text-xs sm:text-sm text-slate-700 leading-relaxed"
+                style={{ fontFamily: FONT_DEFINITIONS[fontFamily]?.cssFamily }}
+              >
+                O compromisso primordial do jornalismo independente é garantir informação clara, ética e precisa. A tipografia escolhida influencia diretamente o ritmo de absorção das matérias, oferecendo ao leitor uma experiência fluida tanto em computadores quanto em dispositivos móveis.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 4: Nome do Portal & Textos */}
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
+          <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Globe className="w-4 h-4 text-red-600" />
+                <span>Nome do Portal & Dados Gerais</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Defina o nome principal do portal e escolha se ele deve ser exibido publicamente junto ao logotipo.
+              </p>
+            </div>
+
+            {/* Toggle Habilitar / Desabilitar Nome do Portal */}
+            <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl self-start sm:self-center">
+              <span className="text-xs font-bold text-slate-700">Exibir Nome:</span>
+              <button
+                type="button"
+                onClick={() => setShowSiteName(!showSiteName)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                  showSiteName ? 'bg-red-600' : 'bg-slate-300'
+                }`}
+                role="switch"
+                aria-checked={showSiteName}
+                title={showSiteName ? 'Clique para desabilitar o nome do portal' : 'Clique para habilitar o nome do portal'}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                    showSiteName ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+              <span className={`text-xs font-black ${showSiteName ? 'text-red-600' : 'text-slate-400'}`}>
+                {showSiteName ? 'Habilitado' : 'Desabilitado'}
+              </span>
+            </div>
+          </div>
+
+          {/* Feedback Box explaining status */}
+          <div className={`p-3.5 rounded-xl border text-xs flex items-center justify-between gap-3 ${
+            showSiteName
+              ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
+              : 'bg-amber-50/70 border-amber-200 text-amber-900'
+          }`}>
+            <div className="flex items-center gap-2">
+              <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${showSiteName ? 'bg-emerald-600' : 'bg-amber-600'}`} />
+              <span className="font-semibold">
+                {showSiteName
+                  ? 'O Nome do Portal está habilitado: o texto é exibido no topo do site e no cabeçalho.'
+                  : 'O Nome do Portal está desabilitado: apenas o logotipo (imagem ou emblema) é exibido, sem texto.'}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowSiteName(!showSiteName)}
+              className="text-xs font-bold underline cursor-pointer shrink-0"
+            >
+              {showSiteName ? 'Desativar Nome' : 'Ativar Nome'}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Nome do Portal *
+                </label>
+                {!showSiteName && (
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                    Oculto no cabeçalho
+                  </span>
+                )}
+              </div>
+              <input
+                type="text"
+                required
+                value={siteName}
+                onChange={(e) => setSiteName(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Slogan / Tagline
+              </label>
+              <input
+                type="text"
+                value={tagline}
+                onChange={(e) => setTagline(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Descrição Institucional (Aparece no Rodapé)
+            </label>
+            <textarea
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800"
+            />
+          </div>
+        </div>
+
+        {/* Section 3: Redes Sociais & Contato */}
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+          <div className="border-b border-slate-100 pb-3">
+            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <Mail className="w-4 h-4 text-red-600" />
+              <span>Contatos & Redes Sociais</span>
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                E-mail de Contato
+              </label>
+              <input
+                type="email"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Telefone da Redação
+              </label>
+              <input
+                type="text"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Endereço
+              </label>
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800"
+              />
+            </div>
+          </div>
+
+          {/* Social Media Links (Instagram, Facebook, WhatsApp, Twitter) */}
+          <div className="pt-4 border-t border-slate-100 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-red-600" />
+                  <span>Redes Sociais no Rodapé</span>
+                </h4>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Apenas as redes que estiverem <strong>selecionadas (ativas)</strong> e com o <strong>link preenchido</strong> serão exibidas no rodapé do portal.
+                </p>
+              </div>
+
+              {/* Status counter pill */}
+              <div className="flex items-center gap-1.5 text-xs bg-slate-100 px-3 py-1.5 rounded-full font-medium text-slate-700">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span>
+                  {[
+                    instagramEnabled && !!instagram.trim(),
+                    facebookEnabled && !!facebook.trim(),
+                    whatsappEnabled && !!whatsapp.trim(),
+                    twitterEnabled && !!twitter.trim(),
+                  ].filter(Boolean).length} de 4 ativas no rodapé
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Instagram */}
+              <div className={`p-4 rounded-xl border transition-all ${
+                instagramEnabled && instagram.trim()
+                  ? 'bg-gradient-to-br from-pink-50/40 via-purple-50/30 to-white border-purple-200 shadow-2xs'
+                  : 'bg-slate-50/70 border-slate-200 opacity-80'
+              }`}>
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-amber-500 via-red-600 to-purple-600 text-white flex items-center justify-center">
+                      <Instagram className="w-4 h-4" />
+                    </div>
+                    <span className="font-bold text-xs text-slate-900">Instagram</span>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={instagramEnabled}
+                      onChange={(e) => setInstagramEnabled(e.target.checked)}
+                      className="w-4 h-4 rounded text-red-600 focus:ring-red-500 border-slate-300 cursor-pointer"
+                    />
+                    <span className={`text-xs font-semibold ${instagramEnabled ? 'text-emerald-700' : 'text-slate-400'}`}>
+                      {instagramEnabled ? 'Ativo' : 'Desativado'}
+                    </span>
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="url"
+                    disabled={!instagramEnabled}
+                    value={instagram}
+                    onChange={(e) => setInstagram(e.target.value)}
+                    placeholder="https://instagram.com/seuperfil"
+                    className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                  />
+                  {instagram.trim() && (
+                    <a
+                      href={instagram.trim()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors shrink-0"
+                      title="Testar link do Instagram"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
+                <div className="mt-1.5 flex items-center gap-1.5 text-[11px]">
+                  {instagramEnabled && instagram.trim() ? (
+                    <span className="text-emerald-600 font-medium flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Visível no rodapé
+                    </span>
+                  ) : instagramEnabled && !instagram.trim() ? (
+                    <span className="text-amber-600 font-medium flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> Preencha o link para exibir
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 flex items-center gap-1">
+                      <XCircle className="w-3 h-3" /> Não será exibido no rodapé
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Facebook */}
+              <div className={`p-4 rounded-xl border transition-all ${
+                facebookEnabled && facebook.trim()
+                  ? 'bg-gradient-to-br from-blue-50/40 to-white border-blue-200 shadow-2xs'
+                  : 'bg-slate-50/70 border-slate-200 opacity-80'
+              }`}>
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center">
+                      <Facebook className="w-4 h-4 fill-current" />
+                    </div>
+                    <span className="font-bold text-xs text-slate-900">Facebook</span>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={facebookEnabled}
+                      onChange={(e) => setFacebookEnabled(e.target.checked)}
+                      className="w-4 h-4 rounded text-red-600 focus:ring-red-500 border-slate-300 cursor-pointer"
+                    />
+                    <span className={`text-xs font-semibold ${facebookEnabled ? 'text-emerald-700' : 'text-slate-400'}`}>
+                      {facebookEnabled ? 'Ativo' : 'Desativado'}
+                    </span>
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="url"
+                    disabled={!facebookEnabled}
+                    value={facebook}
+                    onChange={(e) => setFacebook(e.target.value)}
+                    placeholder="https://facebook.com/suapagina"
+                    className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                  />
+                  {facebook.trim() && (
+                    <a
+                      href={facebook.trim()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors shrink-0"
+                      title="Testar link do Facebook"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
+                <div className="mt-1.5 flex items-center gap-1.5 text-[11px]">
+                  {facebookEnabled && facebook.trim() ? (
+                    <span className="text-emerald-600 font-medium flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Visível no rodapé
+                    </span>
+                  ) : facebookEnabled && !facebook.trim() ? (
+                    <span className="text-amber-600 font-medium flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> Preencha o link para exibir
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 flex items-center gap-1">
+                      <XCircle className="w-3 h-3" /> Não será exibido no rodapé
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* WhatsApp */}
+              <div className={`p-4 rounded-xl border transition-all ${
+                whatsappEnabled && whatsapp.trim()
+                  ? 'bg-gradient-to-br from-emerald-50/40 to-white border-emerald-200 shadow-2xs'
+                  : 'bg-slate-50/70 border-slate-200 opacity-80'
+              }`}>
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center">
+                      <MessageCircle className="w-4 h-4" />
+                    </div>
+                    <span className="font-bold text-xs text-slate-900">WhatsApp (Canal / Grupo)</span>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={whatsappEnabled}
+                      onChange={(e) => setWhatsappEnabled(e.target.checked)}
+                      className="w-4 h-4 rounded text-red-600 focus:ring-red-500 border-slate-300 cursor-pointer"
+                    />
+                    <span className={`text-xs font-semibold ${whatsappEnabled ? 'text-emerald-700' : 'text-slate-400'}`}>
+                      {whatsappEnabled ? 'Ativo' : 'Desativado'}
+                    </span>
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="url"
+                    disabled={!whatsappEnabled}
+                    value={whatsapp}
+                    onChange={(e) => setWhatsapp(e.target.value)}
+                    placeholder="https://whatsapp.com/channel/... ou https://wa.me/..."
+                    className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                  />
+                  {whatsapp.trim() && (
+                    <a
+                      href={whatsapp.trim()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors shrink-0"
+                      title="Testar link do WhatsApp"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
+                <div className="mt-1.5 flex items-center gap-1.5 text-[11px]">
+                  {whatsappEnabled && whatsapp.trim() ? (
+                    <span className="text-emerald-600 font-medium flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Visível no rodapé
+                    </span>
+                  ) : whatsappEnabled && !whatsapp.trim() ? (
+                    <span className="text-amber-600 font-medium flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> Preencha o link para exibir
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 flex items-center gap-1">
+                      <XCircle className="w-3 h-3" /> Não será exibido no rodapé
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Twitter / X */}
+              <div className={`p-4 rounded-xl border transition-all ${
+                twitterEnabled && twitter.trim()
+                  ? 'bg-gradient-to-br from-sky-50/40 to-white border-sky-200 shadow-2xs'
+                  : 'bg-slate-50/70 border-slate-200 opacity-80'
+              }`}>
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-sky-500 text-white flex items-center justify-center">
+                      <Twitter className="w-4 h-4 fill-current" />
+                    </div>
+                    <span className="font-bold text-xs text-slate-900">Twitter / X</span>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={twitterEnabled}
+                      onChange={(e) => setTwitterEnabled(e.target.checked)}
+                      className="w-4 h-4 rounded text-red-600 focus:ring-red-500 border-slate-300 cursor-pointer"
+                    />
+                    <span className={`text-xs font-semibold ${twitterEnabled ? 'text-emerald-700' : 'text-slate-400'}`}>
+                      {twitterEnabled ? 'Ativo' : 'Desativado'}
+                    </span>
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="url"
+                    disabled={!twitterEnabled}
+                    value={twitter}
+                    onChange={(e) => setTwitter(e.target.value)}
+                    placeholder="https://x.com/seuperfil ou https://twitter.com/..."
+                    className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                  />
+                  {twitter.trim() && (
+                    <a
+                      href={twitter.trim()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 text-slate-400 hover:text-sky-500 hover:bg-sky-50 rounded-lg transition-colors shrink-0"
+                      title="Testar link do Twitter / X"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
+                <div className="mt-1.5 flex items-center gap-1.5 text-[11px]">
+                  {twitterEnabled && twitter.trim() ? (
+                    <span className="text-emerald-600 font-medium flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Visível no rodapé
+                    </span>
+                  ) : twitterEnabled && !twitter.trim() ? (
+                    <span className="text-amber-600 font-medium flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> Preencha o link para exibir
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 flex items-center gap-1">
+                      <XCircle className="w-3 h-3" /> Não será exibido no rodapé
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Submit */}
+        <div className="flex justify-end pt-2">
+          <button
+            type="submit"
+            className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all"
+          >
+            Salvar Identidade Visual
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
