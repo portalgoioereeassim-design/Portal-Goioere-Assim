@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, User, Key, ArrowLeft, AlertCircle, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { Lock, User, Key, ArrowLeft, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { storageService } from '../../services/storageService';
 
 interface AdminLoginProps {
@@ -79,15 +79,11 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="@Daniel1995"
+                placeholder="Digite seu usuário"
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-hidden focus:ring-2 focus:ring-red-600 focus:bg-white text-slate-900"
               />
               <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             </div>
-            <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 inline" />
-              <span>Padrão de segurança: <strong>@Daniel1995</strong> (Senha: <strong>1010</strong>)</span>
-            </p>
           </div>
 
           <div>

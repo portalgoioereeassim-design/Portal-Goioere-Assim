@@ -60,7 +60,6 @@ export default function App() {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
-  const [isDatabaseLoading, setIsDatabaseLoading] = useState(true);
   const [isDatabaseConnected, setIsDatabaseConnected] = useState(false);
 
   // Initialize and load data
@@ -93,8 +92,7 @@ export default function App() {
     let isMounted = true;
     const loadFromSupabase = async () => {
       try {
-        setIsDatabaseLoading(true);
-        console.log('[Supabase] Conectando e carregando dados do banco...');
+        console.log('[Supabase] Sincronizando dados em segundo plano...');
         const result = await supabaseSyncService.fetchAndApplyAllFromSupabase();
         if (isMounted) {
           if (result.success) {
@@ -116,8 +114,6 @@ export default function App() {
       } catch (err) {
         console.warn('[Supabase] Erro ao carregar dados do banco:', err);
         if (isMounted) loadPortalData();
-      } finally {
-        if (isMounted) setIsDatabaseLoading(false);
       }
     };
 
@@ -291,14 +287,7 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6">
-        {isDatabaseLoading && articles.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-9 h-9 border-3 border-red-600 border-t-transparent rounded-full animate-spin mb-3.5" />
-            <p className="text-sm font-bold text-slate-800">Conectando ao banco de dados Supabase...</p>
-            <p className="text-xs text-slate-500 mt-1">Carregando matérias e categorias em tempo real.</p>
-          </div>
-        ) : (
-          <Routes>
+        <Routes>
           {/* Home Route */}
           <Route
             path="/"
@@ -453,7 +442,6 @@ export default function App() {
           {/* Fallback wildcard: redirect to Home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        )}
       </main>
 
       {/* Footer */}

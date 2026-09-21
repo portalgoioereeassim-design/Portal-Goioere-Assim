@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, Menu, X, Clock, TrendingUp, Calendar, ArrowRight, Store, Lock, Camera, Radio } from 'lucide-react';
+import { Search, Menu, X, Clock, TrendingUp, Calendar, ArrowRight, Store, Camera, Radio } from 'lucide-react';
 import { Category, VisualIdentity, BusinessGuideConfig, GalleryConfig, NavigationMenuItem } from '../types';
 import { storageService } from '../services/storageService';
 import { Logo } from './Logo';
@@ -106,15 +106,6 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="text-red-400 font-semibold uppercase tracking-wider text-[10px]">Plantão:</span>
                 <span className="text-slate-200 truncate max-w-xs">Cobertura completa em tempo real</span>
               </span>
-              <span className="text-slate-600">|</span>
-              <Link
-                to="/adm"
-                className="inline-flex items-center gap-1 text-[11px] text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-2 py-0.5 rounded transition-colors border border-slate-700 cursor-pointer"
-                title="Acessar Painel Administrativo"
-              >
-                <Lock className="w-3 h-3 text-slate-400" />
-                <span>ADM</span>
-              </Link>
             </div>
           </div>
         </div>
@@ -553,20 +544,9 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
 
             {identity.showSiteName !== false && (
-              <div className="pt-6 mt-6 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-slate-700">{identity.siteName}</p>
-                  {identity.tagline && <p className="mt-1">{identity.tagline}</p>}
-                </div>
-                <Link
-                  to="/adm"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 px-2 py-1 rounded border border-slate-200 transition-colors"
-                  title="Área Administrativa"
-                >
-                  <Lock className="w-3 h-3 text-slate-400" />
-                  <span>ADM</span>
-                </Link>
+              <div className="pt-6 mt-6 border-t border-slate-100 text-xs text-slate-500">
+                <p className="font-medium text-slate-700">{identity.siteName}</p>
+                {identity.tagline && <p className="mt-1">{identity.tagline}</p>}
               </div>
             )}
           </div>
