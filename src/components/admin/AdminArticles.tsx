@@ -71,7 +71,7 @@ export const AdminArticles: React.FC<AdminArticlesProps> = ({
   const [authorRole, setAuthorRole] = useState(editingArticle?.authorRole || 'Redator');
   const [publishedAt, setPublishedAt] = useState(editingArticle?.publishedAt || new Date().toISOString().slice(0, 16));
   const [youtubeUrl, setYoutubeUrl] = useState(editingArticle?.youtubeUrl || '');
-  const [status, setStatus] = useState<'published' | 'draft'>(editingArticle?.status || 'published');
+  const [status, setStatus] = useState<'published' | 'draft' | 'archived'>(editingArticle?.status || 'published');
   const [facebookAutoPublish, setFacebookAutoPublish] = useState(editingArticle?.facebookAutoPublish ?? false);
   const [fontFamily, setFontFamily] = useState<'sans' | 'serif' | 'times' | 'mono'>(editingArticle?.fontFamily || 'sans');
   const [contentTab, setContentTab] = useState<'edit' | 'preview'>('edit');
@@ -1284,7 +1284,16 @@ export const AdminArticles: React.FC<AdminArticlesProps> = ({
                     </span>
                   </td>
                   <td className="py-3 px-4 whitespace-nowrap text-slate-500">
-                    {new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(new Date(article.publishedAt))}
+                    {(() => {
+                      try {
+                        const d = article.publishedAt ? new Date(article.publishedAt) : null;
+                        return d && !isNaN(d.getTime())
+                          ? new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(d)
+                          : '-';
+                      } catch {
+                        return '-';
+                      }
+                    })()}
                   </td>
                   <td className="py-3 px-4 whitespace-nowrap">
                     <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${

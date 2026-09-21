@@ -23,12 +23,16 @@ export const ArticleDetailPage: React.FC<ArticleDetailPageProps> = ({
   }>();
   const navigate = useNavigate();
 
-  const publishedArticles = articles.filter((a) => a.status === 'published');
-  const sidebarBanners = banners.filter((b) => b.position === 'sidebar' && b.active);
+  const safeArticles = Array.isArray(articles) ? articles : [];
+  const safeCategories = Array.isArray(categories) ? categories : [];
+  const safeBanners = Array.isArray(banners) ? banners : [];
+
+  const publishedArticles = safeArticles.filter((a) => a && a.status === 'published');
+  const sidebarBanners = safeBanners.filter((b) => b && b.position === 'sidebar' && b.active);
 
   // Determine article by numeric code, slug or id (e.g. Geral/123476 or noticias/cidade/meu-slug)
   const currentArticle = overrideArticle || (
-    articles.find((a) => {
+    safeArticles.find((a) => {
       const code = getArticleNumericCode(a);
       if (articleSlug) {
         if (

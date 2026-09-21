@@ -220,7 +220,9 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({
                             {store.category}
                           </span>
                           {store.verified && (
-                            <ShieldCheck className="w-4 h-4 text-blue-600" title="Verificada" />
+                            <span title="Verificada">
+                              <ShieldCheck className="w-4 h-4 text-blue-600" />
+                            </span>
                           )}
                         </div>
                         <h3 className="text-base sm:text-lg font-black text-slate-900 group-hover:text-red-600 transition-colors truncate">

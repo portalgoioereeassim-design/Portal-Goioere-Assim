@@ -22,8 +22,12 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
 }) => {
   const { categorySlug } = useParams<{ categorySlug: string }>();
 
-  const publishedArticles = articles.filter(a => a.status === 'published');
-  const sidebarBanners = banners.filter(b => b.position === 'sidebar' && b.active);
+  const safeArticles = Array.isArray(articles) ? articles : [];
+  const safeCategories = Array.isArray(categories) ? categories : [];
+  const safeBanners = Array.isArray(banners) ? banners : [];
+
+  const publishedArticles = safeArticles.filter(a => a && a.status === 'published');
+  const sidebarBanners = safeBanners.filter(b => b && b.position === 'sidebar' && b.active);
 
   const isUltimas = categorySlug === 'ultimas' || categorySlug === 'cat-ultimas';
 
@@ -37,7 +41,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
         order: 0,
         showOnHome: true,
       }
-    : (categories.find(
+    : (safeCategories.find(
         c => c.slug?.toLowerCase() === categorySlug?.toLowerCase() || 
              c.id?.toLowerCase() === categorySlug?.toLowerCase()
       ) || null);

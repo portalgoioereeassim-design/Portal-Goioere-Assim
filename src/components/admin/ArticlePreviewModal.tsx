@@ -12,11 +12,19 @@ interface ArticlePreviewModalProps {
 export const ArticlePreviewModal: React.FC<ArticlePreviewModalProps> = ({ article, onClose }) => {
   const youtubeId = extractYoutubeId(article.youtubeUrl);
 
-  const formattedDate = new Intl.DateTimeFormat('pt-BR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(article.publishedAt ? new Date(article.publishedAt) : new Date());
+  let formattedDate = 'Recentemente';
+  try {
+    const d = article.publishedAt ? new Date(article.publishedAt) : new Date();
+    if (!isNaN(d.getTime())) {
+      formattedDate = new Intl.DateTimeFormat('pt-BR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }).format(d);
+    }
+  } catch {
+    formattedDate = 'Recentemente';
+  }
 
   const articleFontClass = {
     serif: 'font-serif article-font-serif',

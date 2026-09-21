@@ -18,6 +18,7 @@ import {
   BusinessProductService,
   GalleryConfig
 } from './types';
+import { initialArticles, initialCategories, initialBanners } from './data/initialData';
 import { storageService } from './services/storageService';
 import { supabaseSyncService } from './services/supabaseSyncService';
 import { Header } from './components/Header';
@@ -42,19 +43,52 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Application Data States (synced with storageService)
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [banners, setBanners] = useState<Banner[]>([]);
-  const [identity, setIdentity] = useState<VisualIdentity>(storageService.getVisualIdentity());
-  const [facebookConfig, setFacebookConfig] = useState<FacebookConfig>(storageService.getFacebookConfig());
-  const [sitePopup, setSitePopup] = useState<SitePopup>(storageService.getSitePopup());
+  // Application Data States (synced with storageService and guaranteed non-empty on first render)
+  const [articles, setArticles] = useState<Article[]>(() => {
+    try {
+      const stored = storageService.getArticles();
+      return stored && stored.length > 0 ? stored : initialArticles;
+    } catch {
+      return initialArticles;
+    }
+  });
+  const [categories, setCategories] = useState<Category[]>(() => {
+    try {
+      const stored = storageService.getCategories();
+      return stored && stored.length > 0 ? stored : initialCategories;
+    } catch {
+      return initialCategories;
+    }
+  });
+  const [banners, setBanners] = useState<Banner[]>(() => {
+    try {
+      const stored = storageService.getBanners();
+      return stored && stored.length > 0 ? stored : initialBanners;
+    } catch {
+      return initialBanners;
+    }
+  });
+  const [identity, setIdentity] = useState<VisualIdentity>(() => storageService.getVisualIdentity());
+  const [facebookConfig, setFacebookConfig] = useState<FacebookConfig>(() => storageService.getFacebookConfig());
+  const [sitePopup, setSitePopup] = useState<SitePopup>(() => storageService.getSitePopup());
 
   // Business Guide Data States
-  const [businessConfig, setBusinessConfig] = useState<BusinessGuideConfig>(storageService.getBusinessGuideConfig());
-  const [businessStores, setBusinessStores] = useState<BusinessStore[]>([]);
-  const [businessProducts, setBusinessProducts] = useState<BusinessProductService[]>([]);
-  const [galleryConfig, setGalleryConfig] = useState<GalleryConfig>(storageService.getGalleryConfig());
+  const [businessConfig, setBusinessConfig] = useState<BusinessGuideConfig>(() => storageService.getBusinessGuideConfig());
+  const [businessStores, setBusinessStores] = useState<BusinessStore[]>(() => {
+    try {
+      return storageService.getBusinessStores() || [];
+    } catch {
+      return [];
+    }
+  });
+  const [businessProducts, setBusinessProducts] = useState<BusinessProductService[]>(() => {
+    try {
+      return storageService.getBusinessProducts() || [];
+    } catch {
+      return [];
+    }
+  });
+  const [galleryConfig, setGalleryConfig] = useState<GalleryConfig>(() => storageService.getGalleryConfig());
 
   // Admin Access & Authentication
   const [isAdminOpen, setIsAdminOpen] = useState(false);
@@ -62,18 +96,27 @@ export default function App() {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [isDatabaseConnected, setIsDatabaseConnected] = useState(false);
 
-  // Initialize and load data
+  // Initialize and load data safely
   const loadPortalData = () => {
-    setArticles(storageService.getArticles());
-    setCategories(storageService.getCategories());
-    setBanners(storageService.getBanners());
-    setIdentity(storageService.getVisualIdentity());
-    setFacebookConfig(storageService.getFacebookConfig());
-    setSitePopup(storageService.getSitePopup());
-    setBusinessConfig(storageService.getBusinessGuideConfig());
-    setBusinessStores(storageService.getBusinessStores());
-    setBusinessProducts(storageService.getBusinessProducts());
-    setGalleryConfig(storageService.getGalleryConfig());
+    try {
+      const arts = storageService.getArticles();
+      if (arts && arts.length > 0) setArticles(arts);
+      const cats = storageService.getCategories();
+      if (cats && cats.length > 0) setCategories(cats);
+      const bans = storageService.getBanners();
+      if (bans && bans.length > 0) setBanners(bans);
+      setIdentity(storageService.getVisualIdentity());
+      setFacebookConfig(storageService.getFacebookConfig());
+      setSitePopup(storageService.getSitePopup());
+      setBusinessConfig(storageService.getBusinessGuideConfig());
+      const stores = storageService.getBusinessStores();
+      if (stores) setBusinessStores(stores);
+      const prods = storageService.getBusinessProducts();
+      if (prods) setBusinessProducts(prods);
+      setGalleryConfig(storageService.getGalleryConfig());
+    } catch (err) {
+      console.warn('Erro ao carregar dados locais:', err);
+    }
   };
 
   useEffect(() => {
@@ -88,7 +131,7 @@ export default function App() {
     // Initialize Supabase Auto-Sync background listener
     const cleanupAutoSync = supabaseSyncService.initAutoSyncListener();
 
-    // Directly fetch live database data from Supabase
+    // Directly fetch live database data from Supabase in background
     let isMounted = true;
     const loadFromSupabase = async () => {
       try {
@@ -97,15 +140,15 @@ export default function App() {
         if (isMounted) {
           if (result.success) {
             setIsDatabaseConnected(true);
-            if (result.articles) setArticles(result.articles);
-            if (result.categories) setCategories(result.categories);
-            if (result.banners) setBanners(result.banners);
+            if (result.articles && result.articles.length > 0) setArticles(result.articles);
+            if (result.categories && result.categories.length > 0) setCategories(result.categories);
+            if (result.banners && result.banners.length > 0) setBanners(result.banners);
             if (result.identity) setIdentity(result.identity);
             if (result.facebookConfig) setFacebookConfig(result.facebookConfig);
             if (result.sitePopup) setSitePopup(result.sitePopup);
             if (result.businessConfig) setBusinessConfig(result.businessConfig);
-            if (result.businessStores) setBusinessStores(result.businessStores);
-            if (result.businessProducts) setBusinessProducts(result.businessProducts);
+            if (result.businessStores && result.businessStores.length > 0) setBusinessStores(result.businessStores);
+            if (result.businessProducts && result.businessProducts.length > 0) setBusinessProducts(result.businessProducts);
             if (result.galleryConfig) setGalleryConfig(result.galleryConfig);
           } else {
             loadPortalData();

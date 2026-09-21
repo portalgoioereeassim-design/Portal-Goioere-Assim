@@ -18,11 +18,19 @@ export const NewsPage: React.FC<NewsPageProps> = ({
   banners,
   onBannerClick,
 }) => {
-  const publishedArticles = articles
-    .filter((a) => a.status === 'published')
-    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+  const safeArticles = Array.isArray(articles) ? articles : [];
+  const safeCategories = Array.isArray(categories) ? categories : [];
+  const safeBanners = Array.isArray(banners) ? banners : [];
 
-  const sidebarBanners = banners.filter((b) => b.position === 'sidebar' && b.active);
+  const publishedArticles = safeArticles
+    .filter((a) => a && a.status === 'published')
+    .sort((a, b) => {
+      const timeB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+      const timeA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+      return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+    });
+
+  const sidebarBanners = safeBanners.filter((b) => b && b.position === 'sidebar' && b.active);
 
   return (
     <div className="space-y-8 animate-fadeIn">

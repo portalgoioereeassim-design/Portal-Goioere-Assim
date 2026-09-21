@@ -16,10 +16,13 @@ export const SearchPage: React.FC<SearchPageProps> = ({
   const navigate = useNavigate();
   const query = searchParams.get('q') || '';
 
-  const publishedArticles = articles.filter((a) => a.status === 'published');
+  const safeArticles = Array.isArray(articles) ? articles : [];
+  const safeCategories = Array.isArray(categories) ? categories : [];
+
+  const publishedArticles = safeArticles.filter((a) => a && a.status === 'published');
 
   const handleOpenArticle = (slugOrId: string) => {
-    const art = articles.find((a) => a.slug === slugOrId || a.id === slugOrId);
+    const art = safeArticles.find((a) => a.slug === slugOrId || a.id === slugOrId);
     if (art?.categorySlug) {
       navigate(`/noticias/${art.categorySlug}/${art.slug || art.id}`);
     } else {
@@ -28,7 +31,7 @@ export const SearchPage: React.FC<SearchPageProps> = ({
   };
 
   const handleSelectCategory = (categoryId: string) => {
-    const cat = categories.find((c) => c.id === categoryId || c.slug === categoryId);
+    const cat = safeCategories.find((c) => c.id === categoryId || c.slug === categoryId);
     if (cat) {
       navigate(`/noticias/${cat.slug || cat.id}`);
     } else {

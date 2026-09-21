@@ -1,6 +1,7 @@
 import { getSupabaseClient, getSupabaseConfig, testSupabaseConnection } from './supabaseClient';
 import { storageService, MOCK_ARTICLE_IDS, DEFAULT_DATABASE_CATEGORIES } from './storageService';
 import { Article, Banner, Category } from '../types';
+import { initialArticles } from '../data/initialData';
 
 export interface SyncStatus {
   lastSyncTime: string | null;
@@ -1958,6 +1959,9 @@ export const supabaseSyncService = {
       // Se nenhum artigo foi retornado pelo Supabase (ex: primeiro acesso sem dados), manter os artigos existentes locais
       if (loadedArticles.length === 0) {
         loadedArticles = storageService.getArticles();
+        if (!loadedArticles || loadedArticles.length === 0) {
+          loadedArticles = initialArticles;
+        }
       }
 
       // 7. Salvar diretamente no storageService para atualizar o cache do cliente sem disparar auto-sync cíclico

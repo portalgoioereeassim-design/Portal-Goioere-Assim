@@ -25,19 +25,41 @@ export const HomePage: React.FC<HomePageProps> = ({
   onBannerClick,
 }) => {
   const navigate = useNavigate();
-  const publishedArticles = articles.filter(a => a.status === 'published');
-  const slideshowBanners = banners.filter(b => b.position === 'slideshow' && b.active);
-  const sidebarBanners = banners.filter(b => b.position === 'sidebar' && b.active);
-  const bodySlideshowBanners = banners.filter(b => b.position === 'body_slideshow' && b.active);
+  const safeArticles = Array.isArray(articles) ? articles : [];
+  const safeCategories = Array.isArray(categories) ? categories : [];
+  const safeBanners = Array.isArray(banners) ? banners : [];
+  const safeStores = Array.isArray(businessStores) ? businessStores : [];
+
+  const publishedArticles = safeArticles.filter(a => a && a.status === 'published');
+  const slideshowBanners = safeBanners.filter(b => b && b.position === 'slideshow' && b.active);
+  const sidebarBanners = safeBanners.filter(b => b && b.position === 'sidebar' && b.active);
+  const bodySlideshowBanners = safeBanners.filter(b => b && b.position === 'body_slideshow' && b.active);
 
   const handleOpenArticle = (slug: string) => {
-    const article = articles.find(a => a.slug === slug || a.id === slug);
+    const article = safeArticles.find(a => a.slug === slug || a.id === slug);
     if (article?.categorySlug) {
       navigate(`/noticias/${article.categorySlug}/${article.slug || article.id}`);
     } else {
       navigate(`/noticias/${slug}`);
     }
   };
+
+  // Determine if any categories matched articles
+  const activeCategoriesWithArticles = [...safeCategories]
+    .filter((category) => category.showOnHome !== false)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .map((category) => {
+      const catArticles = publishedArticles.filter(
+        (a) => a.categoryId === category.id ||
+               a.categoryId === category.slug ||
+               a.categoryId?.replace(/^cat-/, '') === category.slug ||
+               a.categoryId?.replace(/^cat-/, '') === category.id ||
+               a.categorySlug === category.slug ||
+               (a.categoryName && category.name && a.categoryName.toLowerCase() === category.name.toLowerCase())
+      );
+      return { category, articles: catArticles };
+    })
+    .filter(item => item.articles.length > 0);
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -63,26 +85,9 @@ export const HomePage: React.FC<HomePageProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Categorized News Sections (8 cols) */}
         <div className="lg:col-span-8 space-y-10">
-          {[...categories]
-            .filter((category) => category.showOnHome !== false)
-            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-            .map((category, catIndex) => {
-              const catArticles = publishedArticles.filter(
-                (a) => a.categoryId === category.id ||
-                       a.categoryId === category.slug ||
-                       a.categoryId?.replace(/^cat-/, '') === category.slug ||
-                       a.categoryId?.replace(/^cat-/, '') === category.id ||
-                       a.categorySlug === category.slug ||
-                       (a.categoryName && category.name && a.categoryName.toLowerCase() === category.name.toLowerCase())
-              );
-
-              if (catArticles.length === 0) return null;
-
+          {activeCategoriesWithArticles.length > 0 ? (
+            activeCategoriesWithArticles.map(({ category, articles: catArticles }, catIndex) => {
               const [leadArticle, ...restArticles] = catArticles;
-              const supporterBannerForThisSection = sidebarBanners.length > 0 
-                ? sidebarBanners[catIndex % sidebarBanners.length] 
-                : null;
-
               const categoryUrl = `/noticias/${category.slug || category.id}`;
 
               return (
@@ -161,7 +166,39 @@ export const HomePage: React.FC<HomePageProps> = ({
                   </section>
                 </React.Fragment>
               );
-            })}
+            })
+          ) : publishedArticles.length > 0 ? (
+            /* Fallback: Se as categorias não coincidiram perfeitamente com os IDs dos artigos, exibe todas as publicadas */
+            <section className="space-y-4">
+              <div className="flex items-center justify-between border-b-2 border-slate-200 pb-2">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-3.5 h-3.5 rounded-xs bg-red-600 shrink-0" />
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+                    Últimas Notícias
+                  </h2>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {publishedArticles.slice(0, 10).map((art) => (
+                  <ArticleCard key={art.id} article={art} onSelect={handleOpenArticle} />
+                ))}
+              </div>
+            </section>
+          ) : (
+            /* Estado quando não há nenhuma matéria cadastrada ou publicada */
+            <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center my-4 shadow-xs">
+              <h3 className="text-base font-bold text-slate-800 mb-1">Portal em Atualização</h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto mb-4">
+                As publicações cadastradas no painel administrativo aparecerão aqui em tempo real.
+              </p>
+              <button
+                onClick={() => navigate('/adm')}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+              >
+                Acessar Painel Administrativo
+              </button>
+            </div>
+          )}
 
           {/* Body Slideshow Carousel below the category blocks */}
           {bodySlideshowBanners.length > 0 && (
@@ -215,7 +252,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
 
           {/* Guia Empresarial Quick Spotlight Widget in Sidebar */}
-          {businessConfig?.enabled !== false && businessStores.length > 0 && (
+          {businessConfig?.enabled !== false && safeStores.length > 0 && (
             <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-5 shadow-xs">
               <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-700/60">
                 <div className="flex items-center gap-2">
@@ -237,7 +274,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               </p>
 
               <div className="space-y-2.5">
-                {businessStores.slice(0, 3).map((store) => (
+                {safeStores.slice(0, 3).map((store) => (
                   <Link
                     key={store.id}
                     to={`/guia-empresarial/${store.slug}`}

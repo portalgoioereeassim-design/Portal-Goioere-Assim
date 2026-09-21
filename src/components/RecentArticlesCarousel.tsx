@@ -22,9 +22,14 @@ export const RecentArticlesCarousel: React.FC<RecentArticlesCarouselProps> = ({
   const [activeIndex, setActiveIndex] = useState(0);
 
   // Take the most recent published articles (up to 12)
-  const recentArticles = articles
-    .filter(a => a.status === 'published')
-    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+  const safeArticles = Array.isArray(articles) ? articles : [];
+  const recentArticles = safeArticles
+    .filter(a => a && a.status === 'published')
+    .sort((a, b) => {
+      const timeB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+      const timeA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+      return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+    })
     .slice(0, 12);
 
   // Check scroll position to update arrows

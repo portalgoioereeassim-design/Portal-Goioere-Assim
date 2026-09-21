@@ -53,18 +53,27 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
   // Extract YouTube ID
   const youtubeId = extractYoutubeId(article.youtubeUrl);
 
-  // Format date and time in Portuguese
-  const publishDate = new Date(article.publishedAt);
-  const dateFormatted = new Intl.DateTimeFormat('pt-BR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(publishDate);
+  // Format date and time in Portuguese safely
+  let dateFormatted = '';
+  let timeFormatted = '';
+  try {
+    const publishDate = article.publishedAt ? new Date(article.publishedAt) : new Date();
+    if (!isNaN(publishDate.getTime())) {
+      dateFormatted = new Intl.DateTimeFormat('pt-BR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }).format(publishDate);
 
-  const timeFormatted = new Intl.DateTimeFormat('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(publishDate);
+      timeFormatted = new Intl.DateTimeFormat('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(publishDate);
+    }
+  } catch {
+    dateFormatted = 'Recentemente';
+    timeFormatted = '';
+  }
 
   // Short and category-based sharing URL (ex: Geral/123476)
   const numericCode = getArticleNumericCode(article);

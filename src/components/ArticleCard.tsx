@@ -19,12 +19,20 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
   const navigate = useNavigate();
   const effectiveVariant = featured ? 'featured' : variant;
 
-  // Format date in PT-BR (day + short month)
-  const formattedDate = new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(article.publishedAt));
+  // Format date in PT-BR (day + short month) safely without throwing
+  let formattedDate = '';
+  try {
+    const d = article.publishedAt ? new Date(article.publishedAt) : new Date();
+    if (!isNaN(d.getTime())) {
+      formattedDate = new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }).format(d);
+    }
+  } catch {
+    formattedDate = '';
+  }
 
   // Calculate estimated reading time
   const words = (article.content || '').trim().split(/\s+/).length;

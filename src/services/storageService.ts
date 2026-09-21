@@ -343,7 +343,7 @@ export const storageService = {
 
     // Default to initial articles filtered by deletedIds
     const seeded = initialArticles.filter(a => !deletedIds.has(a.id));
-    return seeded;
+    return seeded.length > 0 ? seeded : initialArticles;
   },
 
   saveArticles(articles: Article[]): void {
@@ -971,21 +971,24 @@ export const storageService = {
 
   // Banners
   getBanners(): Banner[] {
+    const deletedIds = this.getDeletedBannerIds();
     try {
       const data = localStorage.getItem(STORAGE_KEYS.BANNERS);
-      const deletedIds = this.getDeletedBannerIds();
 
       if (data !== null) {
         let parsed: Banner[] = JSON.parse(data);
         if (deletedIds.size > 0) {
           parsed = parsed.filter(b => !deletedIds.has(b.id));
         }
-        return parsed;
+        if (parsed.length > 0) {
+          return parsed;
+        }
       }
     } catch (e) {
       console.error('Failed to load banners', e);
     }
-    return [];
+    const seeded = initialBanners.filter(b => !deletedIds.has(b.id));
+    return seeded.length > 0 ? seeded : initialBanners;
   },
 
   saveBanners(banners: Banner[]): void {
